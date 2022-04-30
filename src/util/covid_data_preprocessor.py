@@ -18,17 +18,25 @@ data_path = "data/owid-covid-data.csv"
 f = open(data_path, 'r')
 labels = f.readline().split(',')
 
+
+#print(labels[19])
+#assert(False)
+
 reader = csv.reader(f)
 
 data_dict = {}
         
 cnt = 0
 for line in reader:
+    
     # default information
     location = line[2]
     date = line[3]
     new_case = line[5]
     new_death = line[8]
+    icu = line[17] # intensive care unit
+    hosp_patients = line[19]
+    
     
     # auxiliary data
     population = line[48]
@@ -41,6 +49,8 @@ for line in reader:
     # data conversion (string -> int/float)
     new_case = cond_str_to_int(new_case)
     new_death = cond_str_to_int(new_death)
+    icu = cond_str_to_int(icu)
+    hosp_patients = cond_str_to_int(hosp_patients)
     
     population = cond_str_to_int(population)
     population_density = cond_str_to_float(population_density)
@@ -56,6 +66,8 @@ for line in reader:
         data_dict[location]['dates'] = np.concatenate ((data_dict[location]['dates'], [date]))
         data_dict[location]['new_case'] = np.concatenate ((data_dict[location]['new_case'], [new_case]))
         data_dict[location]['new_death'] = np.concatenate ((data_dict[location]['new_death'], [new_death]))
+        data_dict[location]['icu'] = np.concatenate ((data_dict[location]['icu'], [icu]))
+        data_dict[location]['hosp_patients'] = np.concatenate ((data_dict[location]['hosp_patients'], [hosp_patients]))
         
     else:
         payload = {}
@@ -63,6 +75,8 @@ for line in reader:
         payload['dates'] = np.array([date])
         payload['new_case'] = np.array([new_case])
         payload['new_death'] = np.array([new_death])
+        payload['icu'] = np.array([icu])
+        payload['hosp_patients'] = np.array([hosp_patients])
         
         payload['population'] = population
         payload['median_age'] = median_age
@@ -71,6 +85,7 @@ for line in reader:
         payload['hospital_beds_per_thousand'] = hospital_beds_per_thousand
         
         data_dict[location] = payload
+        
 
 
 #print(data_dict)
@@ -80,58 +95,4 @@ for line in reader:
 loc_name = [k for k, _ in data_dict.items()]
 data_field = [v for _, v in data_dict.items()]
 
-#np.savez('data/covid_data.npz', loc_name=loc_name, data=data_field)
-
-
-
-'''
-data_dir = '/Users/hwang/projects/COVID-19/csse_covid_19_data/csse_covid_19_daily_reports'
-
-
-# output dict
-# keys: positive, death
-COVID_data = {}
-
-
-
-for dirName, subdirList, fileList in os.walk(data_dir):
-    print(fileList[:3], dirName.split('/')[-1])
-
-    testcase_name = dirName.split('/')[-1]
-    
-    if fileList == []:
-        continue # skip empty folder
-    
-    
-    file_to_order = []
-    for file in fileList:
-        extension = file.split('.')[-1]
-        
-        # if this file is not *.csv, goto next file
-        if extension != 'csv':
-            continue
-            
-        date = dt.datetime.strptime(file.split('.')[0], "%m-%d-%Y")
-        
-        file_dt = "%04d-%02d-%02d" % (date.year, date.month, date.day)
-        file_path = dirName + '/' + file
-        file_to_order.append((file_dt, file_path))
-        
-    file_to_order.sort()
-    print(file_to_order[:2])
-    
-    
-    # iterate files in this directory
-    for date, file_path in file_to_order:
-        f = open(file_path, 'r')
-        labels = f.readline().split(',')
-        print(labels)
-        
-        reader = csv.reader(f)
-        
-        for line in reader:
-            print(line)
-            print(line[3], line[7], line[8])
-            break
-        break
-'''
+# np.savez('data/covid_data.npz', loc_name=loc_name, data=data_field)

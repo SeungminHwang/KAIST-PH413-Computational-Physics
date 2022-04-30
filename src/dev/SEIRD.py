@@ -47,7 +47,7 @@ class SEIRD(nn.Module):
 
 # test ODEINT
 
-NUM_SAMPLES = 10000
+NUM_SAMPLES = 1000
 initial_states = torch.Tensor([50000000., 0., 100., 0., 0., 0., 0., 0., 0.])
 initial_params = {
     'alpha_E': 1/3,
@@ -62,8 +62,10 @@ initial_params = {
     'delta': 1/45,
     'mu': 0.001,
 }
-t = torch.linspace(0., 1000., NUM_SAMPLES)
+t = torch.linspace(0., 100., NUM_SAMPLES)
 result = odeint(SEIRD(), initial_states, t)
+
+print(t)
 
 # S, E, I, N, P, Hm, Hs, R, D = y
 S = result[:, 0]

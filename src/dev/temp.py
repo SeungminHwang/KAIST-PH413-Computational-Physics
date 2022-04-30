@@ -31,14 +31,27 @@ for name in target_countries:
     country_date = country_data['dates']
     country_positive = country_data['new_case']
     country_death = country_data['new_death']
+    country_icu = country_data['icu']
+    country_hosp = country_data['hosp_patients']
+    
+    # auxiliary data
+    population = country_data['population']
+    med_age = country_data['median_age']
+    age65_older = country_data['aged_65_older']
+    gdp_per_capita = country_data['gdp_per_capita']
+    beds = country_data['hospital_beds_per_thousand']
+    
+    print(name, population, med_age, age65_older, gdp_per_capita, beds)
     
     
     x_values = [dt.datetime.strptime(d,"%Y-%m-%d").date() for d in country_date]
     ax.plot(x_values, country_positive)
+    #ax.plot(x_values, country_hosp)
 
     
 ax.legend(target_countries)
 plt.show()
+
 
 
 
