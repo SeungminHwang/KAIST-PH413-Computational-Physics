@@ -220,7 +220,7 @@ def odeint_plot(output, batch_idx=0, vis=True, save=False, epoch=0, aux=1):
     ax.set_title("epoch %3d - (%s, %d)" % (int(epoch), country_name, start_date), fontsize=15)
     
     if save:
-        plt.savefig('out/epoch_%3d.png' % int(epoch))
+        plt.savefig('out/epoch_%03d.png' % int(epoch))
         print("[odeint_plot] RESULT SAVED")
     if vis:
         plt.show()
