@@ -28,8 +28,8 @@ class SEIRD(nn.Module):
         S, E, I, N, P, Hm, Hs, R, D = y
         
         # System of Differential Equations
-        dS_dt = - beta_I * S - beta_N * S + delta * R
-        dE_dt = beta_I * S + beta_N * S - alpha_E * E
+        dS_dt = - beta_I * I - beta_N * N + delta * R
+        dE_dt = beta_I * I + beta_N * N - alpha_E * E
         dI_dt = alpha_E * E - rho * alpha_I * I - (1 - rho) * alpha_I * I
         dN_dt = (1 - rho) * alpha_I * I - gamma_N * N
         dP_dt = rho * alpha_I * I - kappa * P - (1 - kappa) * P
@@ -62,10 +62,10 @@ initial_params = {
     'delta': 1/45,
     'mu': 0.001,
 }
-t = torch.linspace(0., 100., NUM_SAMPLES)
+t = torch.linspace(0., 60., 10)
 result = odeint(SEIRD(), initial_states, t)
 
-print(t)
+#print(t)
 
 # S, E, I, N, P, Hm, Hs, R, D = y
 S = result[:, 0]
@@ -80,19 +80,19 @@ D = result[:, 8]
 
 
 ax = plt.subplot()
-ax.plot(S)
-ax.plot(E)
-ax.plot(I)
-ax.plot(N)
-ax.plot(P)
-ax.plot(Hm)
-ax.plot(Hs)
-ax.plot(R)
-ax.plot(D)
-ax.plot(S + E + I + N + P + Hm + Hs + R + D)
+#ax.plot(S)
+ax.plot(t, E)
+ax.plot(t, I)
+ax.plot(t, N)
+ax.plot(t, P)
+ax.plot(t, Hm)
+ax.plot(t, Hs)
+ax.plot(t, R)
+ax.plot(t, D)
+#ax.plot(S + E + I + N + P + Hm + Hs + R + D)
 
 ax.legend(['S', 'E', 'I', 'N', 'P', 'Hm', 'Hs', 'R', 'D', 'SUM'])
-
+ax.legend(['E', 'I', 'N', 'P', 'Hm', 'Hs', 'R', 'D'])
 
 
 plt.show()

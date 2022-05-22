@@ -16,7 +16,7 @@ from util import *
 import Dataset
 import Network
 
-EPOCH = 100
+EPOCH = 1000
 BATCH_SIZE = 100
 INIT_LR = 0.001
 WEIGHT = 0.0001
@@ -65,7 +65,7 @@ n_state = DatasetState[0].shape[0]
 
 #print(n_window, n_input, n_label, n_state)
 
-model = Network.ParameterNet(n_input, 11, n_window)
+model = Network.ParameterNet(n_input, 11, n_window).to(device)
 
 n_sample_train = train_dataset.n_sample
 lr_step_size = int(n_sample_train / BATCH_SIZE)
@@ -99,7 +99,8 @@ for idx_epoch in range(EPOCH + 1):
         #aux_info = aux
         
         # ParameterNet
-        ParameterNet_output = model(x)
+        ParameterNet_output = model(x) # batch x num_param
+        curr_batch, _ = ParameterNet_output.shape
         #print(ParameterNet_output.shape)
         
         # SEIRD odeint
@@ -110,12 +111,12 @@ for idx_epoch in range(EPOCH + 1):
         Network.set_param(ParameterNet_output, device)
         SEIRD_output = odeint(Network.SEIRD(), s0, t)
         SEIRD_output = torch.swapaxes(SEIRD_output, 0, 1)
-        SEIRD_output = torch.index_select(SEIRD_output, 1, torch.Tensor(range(0, 2 * n_window * 24, 24)).int())
+        SEIRD_output = torch.index_select(SEIRD_output, 1, torch.Tensor(range(0, 2 * n_window * 24, 24)).int().to(device))
         
         
         #odeint_plot(SEIRD_output, vis=False, save=True)
         
-        pred = torch.index_select(SEIRD_output, 2, torch.Tensor([SEIRD_State.P.value, SEIRD_State.D.value]).int())
+        pred = torch.index_select(SEIRD_output, 2, torch.Tensor([SEIRD_State.P.value, SEIRD_State.D.value]).int().to(device))
         
         
         
@@ -123,9 +124,26 @@ for idx_epoch in range(EPOCH + 1):
         #odeint_plot(SEIRD_output, vis=False, save=True)
         
         # loss
-        loss = loss_fn(pred, y)
-        loss.backward()
-        train_loss += loss
+        # guiding loss
+        param_guide = [1/3, 1/3.2, 0.84, 0.26, 0.035, 0.025, 1/3.5, 1/16, 1/16, 1/180, 0.001] * curr_batch
+        param_guide = np.array(param_guide).reshape(-1, 11).transpose()
+        param_guide = torch.Tensor(param_guide)
+        param_guide = torch.swapaxes(param_guide, 0, 1)
+        
+        
+        #loss_guide = 
+        if idx_epoch < 0:
+            loss = loss_fn(ParameterNet_output,param_guide)
+            loss.backward()
+            train_loss += loss
+        else:
+            # predict loss
+            loss1 = loss_fn(pred, y)
+            loss2 = loss_fn(pred, torch.abs(pred))
+            loss3 = loss_fn(ParameterNet_output, torch.abs(ParameterNet_output))
+            loss = loss1 + loss2 + loss3
+            loss.backward()
+            train_loss += loss
         
         
         # update
@@ -139,8 +157,16 @@ for idx_epoch in range(EPOCH + 1):
     print("\r %05d | Train Loss: %.7f | lr: %.7f | time: %.3f" %
           (idx_epoch + 1, train_loss, optimizer.param_groups[0]['lr'], elapsed_time))
     
+    save_model(model, idx_epoch+1, 'out_all/')
+    
     if idx_epoch % 10 == 0:
-        odeint_plot(SEIRD_output, vis=False, save=True, epoch=idx_epoch+1, aux=aux)
+        odeint_plot(SEIRD_output, vis=False, save=True, epoch=idx_epoch+1, aux=aux,
+                    out_folder='out_all')
+        export_results(ParameterNet_output, SEIRD_output,
+                       pred, y, out_folder='out_all', aux=aux, epoch=idx_epoch+1)
+    
+    if idx_epoch % 50 == 0:
+        pass
 
 
 

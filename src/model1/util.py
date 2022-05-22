@@ -2,6 +2,7 @@ import datetime as dt
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
+import csv
 
 # global vars
 country_names = []
@@ -39,7 +40,7 @@ def parse_dataset():
     
     # TODO make this as parameter of this function
     target_countries = ['South Korea', 'United States', 'Germany']
-    #target_countries = [k for k, _ in country_idx_map.items()]
+    target_countries = [k for k, _ in country_idx_map.items()] # whole data
     
     
     
@@ -86,7 +87,7 @@ def parse_dataset():
         #print(stacked.shape)
         
         # label data
-        label = np.stack([country_positive_acc,
+        label = np.stack([country_positive,
                           country_death_acc], axis=1)
         
         # data auxiliary informations
@@ -200,19 +201,22 @@ class SEIRD_State(Enum):
     D = 8
 
 
-def odeint_plot(output, batch_idx=0, vis=True, save=False, epoch=0, aux=1):
+def odeint_plot(output, batch_idx=0, vis=True, save=False, epoch=0, aux=1, out_folder='out'):
+    plt.cla()
     ax = plt.subplot()
     
     batch, num_t, num_state = output.shape
     
     output = output[batch_idx,:,:]
-    output = output.detach().numpy()
+    output = output.cpu().detach().numpy()
     
     start_date = aux[batch_idx, 0, 1]
     country_name = country_names[aux[batch_idx, 0, 0]]
     
     # plot states
-    for i in range(9):
+    for i in range(1, 9):
+        if i == SEIRD_State.R.value:
+            continue
         ax.plot(output[:,i], label=str(SEIRD_State(i))[12:])
     
     
@@ -220,7 +224,7 @@ def odeint_plot(output, batch_idx=0, vis=True, save=False, epoch=0, aux=1):
     ax.set_title("epoch %3d - (%s, %d)" % (int(epoch), country_name, start_date), fontsize=15)
     
     if save:
-        plt.savefig('out/epoch_%03d.png' % int(epoch))
+        plt.savefig(out_folder + '/epoch_%03d.png' % int(epoch))
         print("[odeint_plot] RESULT SAVED")
     if vis:
         plt.show()
@@ -248,3 +252,48 @@ def process_date(dates):
         rtn = np.concatenate((rtn, [num_date]), dtype=np.int32)
 
     return rtn[1:]
+
+def export_results(param_out, ode_out, death_positive_pred, death_positive_label, out_folder='out', epoch=0, aux=1, batch_idx=0):
+    
+    # data conversion
+    tensor_to_list = lambda x: x.detach().cpu().numpy()[batch_idx, :]
+    
+    param_out = tensor_to_list(param_out)
+    ode_out = tensor_to_list(ode_out)
+    death_positive_pred = tensor_to_list(death_positive_pred)
+    death_positive_label = tensor_to_list(death_positive_label)
+    
+    # unpack auxiliary data
+    start_date = aux[batch_idx, 0, 1]
+    country_name = country_names[aux[batch_idx, 0, 0]]
+    
+    # write output
+    f = open(out_folder + '/epoch_%03d.csv' % epoch, 'w')
+    f.write(country_name + ', ' + str(start_date) + '\n')
+    
+    f.write("[Parameters]\n")
+    for i in range(0, 11):
+        f.write(str(SEIRD_Param(i))[12:] + ', ')
+        f.write(str(param_out[i]) + '\n')
+    
+    f.write("[states]\n")
+    for i in range(0, 9):
+        f.write(str(SEIRD_State(i))[12:] + ', ')
+        f.write(str(list(ode_out[:, i]))[1:-1] + '\n')
+    
+    
+    f.write("[positive, death prediction]\n")
+    f.write(str(list(death_positive_pred[:, 0]))[1:-1] + '\n')
+    f.write(str(list(death_positive_pred[:, 1]))[1:-1] + '\n')
+    
+    f.write("[positive, death label]\n")
+    f.write(str(list(death_positive_label[:, 0]))[1:-1] + '\n')
+    f.write(str(list(death_positive_label[:, 1]))[1:-1] + '\n')
+    
+    f.close()
+
+
+def save_model(model, step, dir):
+	fname = "{:06d}_model.pt"
+	torch.save(model.state_dict(), dir + fname.format(step))
+	print("Model saved.")

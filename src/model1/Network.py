@@ -22,7 +22,7 @@ class ParameterNet(nn.Module):
         self.w = n_window
         h = 16
         
-        self.lstm = nn.LSTM(n_input, h, num_layers=2,
+        self.lstm = nn.LSTM(n_input, h, num_layers=5,
                             batch_first=True, dropout=0.5)
         self.out = nn.Linear(n_window * h, n_output)
                 
@@ -111,8 +111,8 @@ class SEIRD(nn.Module):
         #S, E, I, N, P, Hm, Hs, R, D = y # (fix)add param???
         
         # System of Differential Equations
-        dS_dt = - beta_I * S - beta_N * S + delta * R
-        dE_dt = beta_I * S + beta_N * S - alpha_E * E
+        dS_dt = - beta_I * I - beta_N * N + delta * R
+        dE_dt = beta_I * I + beta_N * N - alpha_E * E
         dI_dt = alpha_E * E - rho * alpha_I * I - (1 - rho) * alpha_I * I
         dN_dt = (1 - rho) * alpha_I * I - gamma_N * N
         dP_dt = rho * alpha_I * I - kappa * P - (1 - kappa) * P
