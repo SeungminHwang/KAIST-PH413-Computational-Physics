@@ -157,13 +157,15 @@ for idx_epoch in range(EPOCH + 1):
     print("\r %05d | Train Loss: %.7f | lr: %.7f | time: %.3f" %
           (idx_epoch + 1, train_loss, optimizer.param_groups[0]['lr'], elapsed_time))
     
-    save_model(model, idx_epoch+1, 'out_all/')
+    if idx_epoch % 50 == 0:
+        save_model(model, idx_epoch+1, 'out/')
     
     if idx_epoch % 10 == 0:
+        pass
         odeint_plot(SEIRD_output, vis=False, save=True, epoch=idx_epoch+1, aux=aux,
-                    out_folder='out_all')
+                    out_folder='out')
         export_results(ParameterNet_output, SEIRD_output,
-                       pred, y, out_folder='out_all', aux=aux, epoch=idx_epoch+1)
+                       pred, y, out_folder='out7', aux=aux, epoch=idx_epoch+1)
     
     if idx_epoch % 50 == 0:
         pass

@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import torch
 import csv
 
+import scipy.ndimage
+
 # global vars
 country_names = []
 
@@ -36,11 +38,11 @@ def parse_dataset():
     country_idx_map = {}
     for i, name in enumerate(country_names):
         country_idx_map[name] = i
-    #print(country_idx_map)
+    print(country_idx_map)
     
     # TODO make this as parameter of this function
-    target_countries = ['South Korea', 'United States', 'Germany']
-    target_countries = [k for k, _ in country_idx_map.items()] # whole data
+    target_countries = ['South Korea', 'United States', 'Germany', 'Austria', 'India', 'Italy', 'Russia']
+    #target_countries = [k for k, _ in country_idx_map.items()] # whole data
     
     
     
@@ -56,6 +58,9 @@ def parse_dataset():
         country_death = country_data['new_death']
         country_icu = country_data['icu']
         country_hosp = country_data['hosp_patients']
+
+        # data smoothing
+        #country_positive = scipy.ndimage.gaussian_filter1d(country_positive, 2)
         
         # accumulated data
         country_positive_acc = np.add.accumulate(country_positive)
