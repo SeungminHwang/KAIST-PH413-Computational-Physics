@@ -8,15 +8,15 @@ import csv
 country_names = []
 
 
-def load_dataset():
+def load_dataset(target_countries=None):
     print("Loading Dataset... ", end="")
-    DatasetInput, DatasetLabel, DatasetState, DatasetAux = parse_dataset()
+    DatasetInput, DatasetLabel, DatasetState, DatasetAux = parse_dataset(target_countries)
     print("Completed!")
     
     return DatasetInput, DatasetLabel, DatasetState, DatasetAux
 
 
-def parse_dataset():
+def parse_dataset(target_countries):
     global country_names
     
     # return training/testing data list
@@ -39,8 +39,9 @@ def parse_dataset():
     #print(country_idx_map)
     
     # TODO make this as parameter of this function
-    target_countries = ['South Korea', 'United States', 'Germany']
-    target_countries = [k for k, _ in country_idx_map.items()] # whole data
+    if target_countries == None:
+        target_countries = ['South Korea', 'United States', 'Germany']
+        target_countries = [k for k, _ in country_idx_map.items()] # whole data
     
     
     
