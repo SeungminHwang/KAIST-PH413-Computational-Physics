@@ -1,4 +1,4 @@
-# COVID-19 SEIRA Model Parameter Estimation with Neural Network and Numerical 
+# COVID-19 SEIRA Model Parameter Estimation with Neural Network and Numerical ODE Solver
 
 
 ## Introduction
