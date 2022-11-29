@@ -38,6 +38,7 @@ class ParameterNet(nn.Module):
         lo = self.out(r)
         out = lo.reshape(b, -1)
         return out
+
 class ParameterNet_(nn.Module):
     
     def __init__(self, input_dim=65, output_dim=11):
